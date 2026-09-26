@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Properties Data Table | Real Estate Analytics{% endblock %}
+
+{% block content %}
+<!-- Search & Filter Controls -->
+<section class="filter-panel">
+    <div class="filter-header">
+        <div class="filter-title">
+            <span>🔎</span>
+            <span>Search & Filter Property Listings</span>
+        </div>
+        <div class="kpi-subtext">Showing {{ start_item }} - {{ end_item }} of {{ format_number(total_items) }} records</div>
+    </div>
+    
+    <form action="{{ url_for('properties') }}" method="GET" class="filter-form">
+        <div class="form-group" style="grid-column: span 2;">
+            <label for="search">Keyword Search</label>
+            <input type="text" name="search" id="search" class="form-control" placeholder="Search street, city, zip code..." value="{{ filters.search }}">
+        </div>
+
+        <div class="form-group">
+            <label for="city">City</label>
+            <select name="city" id="city" class="form-control">
+                <option value="All" {% if filters.city == 'All' %}selected{% endif %}>All Cities</option>
+                {% for c in filter_opts.cities %}
+                <option value="{{ c }}" {% if filters.city == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="bedrooms">Bedrooms</label>
+            <select name="bedrooms" id="bedrooms" class="form-control">
+                <option value="All" {% if filters.bedrooms == 'All' %}selected{% endif %}>All Bedrooms</option>
+                {% for b in filter_opts.bedrooms %}
+                <option value="{{ b }}" {% if filters.bedrooms == b|string %}selected{% endif %}>{{ b }} Beds</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="bathrooms">Bathrooms</label>
+            <select name="bathrooms" id="bathrooms" class="form-control">
+                <option value="All" {% if filters.bathrooms == 'All' %}selected{% endif %}>All Bathrooms</option>
+                {% for b in filter_opts.bathrooms %}
+                <option value="{{ b }}" {% if filters.bathrooms == b|string %}selected{% endif %}>{{ b }} Baths</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="min_price">Min Price ($)</label>
+            <input type="number" name="min_price" id="min_price" class="form-control" placeholder="Min" value="{{ filters.min_price }}">
+        </div>
+
+        <div class="form-group">
+            <label for="max_price">Max Price ($)</label>
+            <input type="number" name="max_price" id="max_price" class="form-control" placeholder="Max" value="{{ filters.max_price }}">
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="{{ url_for('properties') }}" class="btn btn-secondary">Clear</a>
+        </div>
+    </form>
+</section>
+
+<!-- Property Data Table Card -->
+<section class="table-card">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Price ($)</th>
+                    <th>Bedrooms</th>
+                    <th>Bathrooms</th>
+                    <th>Living Area</th>
+                    <th>Lot Area</th>
+                    <th>Floors</th>
+                    <th>Waterfront</th>
+                    <th>Condition</th>
+                    <th>Yr Built</th>
+                    <th>Street Address</th>
+                    <th>City</th>
+                    <th>State/ZIP</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if properties %}
+                    {% for prop in properties %}
+                    <tr>
+                        <td style="color: var(--text-secondary);">{{ prop.formatted_date }}</td>
+                        <td style="font-weight: 700; color: var(--accent-emerald);">{{ format_currency(prop.price) }}</td>
+                        <td>{{ format_number(prop.bedrooms) }}</td>
+                        <td>{{ format_number(prop.bathrooms, 1) }}</td>
+                        <td>{{ format_number(prop.sqft_living) }} sqft</td>
+                        <td style="color: var(--text-muted);">{{ format_number(prop.sqft_lot) }} sqft</td>
+                        <td>{{ format_number(prop.floors, 1) }}</td>
+                        <td>
+                            {% if prop.waterfront == 1 %}
+                            <span class="badge badge-wf">🌊 Waterfront</span>
+                            {% else %}
+                            <span class="badge badge-no-wf">No</span>
+                            {% endif %}
+                        </td>
+                        <td>Rating {{ prop.condition }}</td>
+                        <td>{{ prop.yr_built }}</td>
+                        <td style="font-weight: 500;">{{ prop.street }}</td>
+                        <td><span style="color: var(--accent-cyan); font-weight: 600;">{{ prop.city }}</span></td>
+                        <td style="color: var(--text-muted);">{{ prop.statezip }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="13" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            No properties found matching your search and filter criteria.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if total_pages > 1 %}
+    <div class="pagination-container">
+        <div>
+            Page <strong>{{ page }}</strong> of <strong>{{ total_pages }}</strong>
+        </div>
+        <div class="pagination-links">
+            <!-- Prev Link -->
+            <a href="{{ url_for('properties', page=page-1, city=filters.city, bedrooms=filters.bedrooms, bathrooms=filters.bathrooms, min_price=filters.min_price, max_price=filters.max_price, search=filters.search) }}" 
+               class="page-btn {% if page <= 1 %}disabled{% endif %}">
+                &laquo; Prev
+            </a>
+
+            <!-- Page Number Links -->
+            {% set start_p = page - 2 if page - 2 > 0 else 1 %}
+            {% set end_p = start_p + 4 if start_p + 4 <= total_pages else total_pages %}
+            {% for p in range(start_p, end_p + 1) %}
+            <a href="{{ url_for('properties', page=p, city=filters.city, bedrooms=filters.bedrooms, bathrooms=filters.bathrooms, min_price=filters.min_price, max_price=filters.max_price, search=filters.search) }}" 
+               class="page-btn {% if p == page %}active{% endif %}">
+                {{ p }}
+            </a>
+            {% endfor %}
+
+            <!-- Next Link -->
+            <a href="{{ url_for('properties', page=page+1, city=filters.city, bedrooms=filters.bedrooms, bathrooms=filters.bathrooms, min_price=filters.min_price, max_price=filters.max_price, search=filters.search) }}" 
+               class="page-btn {% if page >= total_pages %}disabled{% endif %}">
+                Next &raquo;
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

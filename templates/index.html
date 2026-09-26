@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Real Estate Analytics{% endblock %}
+
+{% block content %}
+<!-- Interactive Filters Section -->
+<section class="filter-panel">
+    <div class="filter-header">
+        <div class="filter-title">
+            <span>🔍</span>
+            <span>Filter Property Data</span>
+        </div>
+        {% if is_filtered %}
+        <span class="badge badge-wf">Filters Applied</span>
+        {% endif %}
+    </div>
+    <form action="{{ url_for('index') }}" method="GET" class="filter-form">
+        <div class="form-group">
+            <label for="city">City</label>
+            <select name="city" id="city" class="form-control">
+                <option value="All" {% if filters.city == 'All' %}selected{% endif %}>All Cities</option>
+                {% for c in filter_opts.cities %}
+                <option value="{{ c }}" {% if filters.city == c %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="bedrooms">Bedrooms</label>
+            <select name="bedrooms" id="bedrooms" class="form-control">
+                <option value="All" {% if filters.bedrooms == 'All' %}selected{% endif %}>All Bedrooms</option>
+                {% for b in filter_opts.bedrooms %}
+                <option value="{{ b }}" {% if filters.bedrooms == b|string %}selected{% endif %}>{{ b }} Bedrooms</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="bathrooms">Bathrooms</label>
+            <select name="bathrooms" id="bathrooms" class="form-control">
+                <option value="All" {% if filters.bathrooms == 'All' %}selected{% endif %}>All Bathrooms</option>
+                {% for b in filter_opts.bathrooms %}
+                <option value="{{ b }}" {% if filters.bathrooms == b|string %}selected{% endif %}>{{ b }} Bathrooms</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="condition">Condition</label>
+            <select name="condition" id="condition" class="form-control">
+                <option value="All" {% if filters.condition == 'All' %}selected{% endif %}>All Conditions</option>
+                {% for c in filter_opts.conditions %}
+                <option value="{{ c }}" {% if filters.condition == c|string %}selected{% endif %}>Rating {{ c }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="waterfront">Waterfront</label>
+            <select name="waterfront" id="waterfront" class="form-control">
+                <option value="All" {% if filters.waterfront == 'All' %}selected{% endif %}>All Properties</option>
+                <option value="1" {% if filters.waterfront == '1' %}selected{% endif %}>Waterfront Only</option>
+                <option value="0" {% if filters.waterfront == '0' %}selected{% endif %}>No Waterfront</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="min_price">Min Price ($)</label>
+            <input type="number" name="min_price" id="min_price" class="form-control" placeholder="e.g. 200000" value="{{ filters.min_price }}">
+        </div>
+
+        <div class="form-group">
+            <label for="max_price">Max Price ($)</label>
+            <input type="number" name="max_price" id="max_price" class="form-control" placeholder="e.g. 1000000" value="{{ filters.max_price }}">
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+</section>
+
+<!-- KPI Summary Cards Grid -->
+<section class="kpi-grid">
+    <div class="kpi-card kpi-blue">
+        <div class="kpi-header">
+            <span class="kpi-label">Total Properties</span>
+            <span class="kpi-icon">🏢</span>
+        </div>
+        <div class="kpi-value">{{ format_number(kpis.total_properties) }}</div>
+        <div class="kpi-subtext">Cleaned Records</div>
+    </div>
+
+    <div class="kpi-card kpi-emerald">
+        <div class="kpi-header">
+            <span class="kpi-label">Avg House Price</span>
+            <span class="kpi-icon">💵</span>
+        </div>
+        <div class="kpi-value">{{ format_currency(kpis.avg_price) }}</div>
+        <div class="kpi-subtext">Mean Property Value</div>
+    </div>
+
+    <div class="kpi-card kpi-cyan">
+        <div class="kpi-header">
+            <span class="kpi-label">Median Price</span>
+            <span class="kpi-icon">🎯</span>
+        </div>
+        <div class="kpi-value">{{ format_currency(kpis.median_price) }}</div>
+        <div class="kpi-subtext">50th Percentile</div>
+    </div>
+
+    <div class="kpi-card kpi-purple">
+        <div class="kpi-header">
+            <span class="kpi-label">Max Price</span>
+            <span class="kpi-icon">🏆</span>
+        </div>
+        <div class="kpi-value">{{ format_currency(kpis.max_price) }}</div>
+        <div class="kpi-subtext">Peak Listing Value</div>
+    </div>
+
+    <div class="kpi-card kpi-amber">
+        <div class="kpi-header">
+            <span class="kpi-label">Avg Living Area</span>
+            <span class="kpi-icon">📐</span>
+        </div>
+        <div class="kpi-value">{{ format_number(kpis.avg_sqft) }} <span style="font-size: 14px;">sqft</span></div>
+        <div class="kpi-subtext">Mean Interior Sqft</div>
+    </div>
+
+    <div class="kpi-card kpi-rose">
+        <div class="kpi-header">
+            <span class="kpi-label">Avg Bedrooms</span>
+            <span class="kpi-icon">🛏️</span>
+        </div>
+        <div class="kpi-value">{{ format_number(kpis.avg_bedrooms, 2) }}</div>
+        <div class="kpi-subtext">Mean Bedroom Count</div>
+    </div>
+</section>
+
+<!-- Visualizations Grid -->
+<section class="chart-grid-2col">
+    <!-- Chart 1: Price Distribution -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>📊</span>
+                <span>Price Distribution & Skewness</span>
+            </div>
+        </div>
+        <div class="chart-img-container">
+            <img src="{{ url_for('static', filename='charts/price_distribution.png') }}?v={{ chart_version }}" alt="Price Distribution Chart">
+        </div>
+    </div>
+
+    <!-- Chart 2: Price vs Living Area -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>📈</span>
+                <span>Price vs Living Area (sqft)</span>
+            </div>
+        </div>
+        <div class="chart-img-container">
+            <img src="{{ url_for('static', filename='charts/sqft_price.png') }}?v={{ chart_version }}" alt="Price vs Living Area Chart">
+        </div>
+    </div>
+
+    <!-- Chart 3: Price by Bedrooms -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>🛏️</span>
+                <span>Average Price by Bedrooms</span>
+            </div>
+        </div>
+        <div class="chart-img-container">
+            <img src="{{ url_for('static', filename='charts/bedrooms_price.png') }}?v={{ chart_version }}" alt="Bedroom Price Chart">
+        </div>
+    </div>
+
+    <!-- Chart 5: Price by City -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>📍</span>
+                <span>Top Cities by Average Price</span>
+            </div>
+        </div>
+        <div class="chart-img-container">
+            <img src="{{ url_for('static', filename='charts/price_by_city.png') }}?v={{ chart_version }}" alt="City Price Chart">
+        </div>
+    </div>
+
+    <!-- Chart 4: Price by Bathrooms -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>🚿</span>
+                <span>Price by Bathrooms</span>
+            </div>
+        </div>
+        <div class="chart-img-container">
+            <img src="{{ url_for('static', filename='charts/bathrooms_price.png') }}?v={{ chart_version }}" alt="Bathroom Price Chart">
+        </div>
+    </div>
+
+    <!-- Chart 6: Waterfront Comparison -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>🌊</span>
+                <span>Waterfront vs Non-Waterfront</span>
+            </div>
+        </div>
+        <div class="chart-img-container">
+            <img src="{{ url_for('static', filename='charts/waterfront_price.png') }}?v={{ chart_version }}" alt="Waterfront Price Chart">
+        </div>
+    </div>
+
+    <!-- Chart 7: Condition vs Price -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>⭐</span>
+                <span>Property Condition Rating vs Price</span>
+            </div>
+        </div>
+        <div class="chart-img-container">
+            <img src="{{ url_for('static', filename='charts/condition_price.png') }}?v={{ chart_version }}" alt="Condition Price Chart">
+        </div>
+    </div>
+
+    <!-- Chart 8: Year Built vs Price -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>🏗️</span>
+                <span>Construction Year vs Price Trend</span>
+            </div>
+        </div>
+        <div class="chart-img-container">
+            <img src="{{ url_for('static', filename='charts/year_price.png') }}?v={{ chart_version }}" alt="Year Built Price Chart">
+        </div>
+    </div>
+</section>
+
+<!-- Dynamic Insights Section -->
+<section class="insights-card">
+    <div class="insights-header">
+        <span style="font-size: 24px;">💡</span>
+        <h3>Key Business & Data Insights</h3>
+    </div>
+    <ul class="insights-list">
+        {% for insight in insights %}
+        <li class="insights-item">
+            <span class="insights-bullet">✓</span>
+            <span>{{ insight }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Detailed Analysis | Real Estate Analytics{% endblock %}
+
+{% block content %}
+<!-- Section Header -->
+<div style="margin-bottom: 28px;">
+    <h3 style="font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 700;">Deep-Dive Statistical Analysis</h3>
+    <p style="color: var(--text-secondary); font-size: 14px;">In-depth breakdowns across feature correlation, geographical distribution, renovation impact, and price variance.</p>
+</div>
+
+<!-- Statistical Summary Cards & Heatmap Grid -->
+<div class="chart-grid-2col" style="margin-bottom: 32px;">
+    <!-- Correlation Heatmap -->
+    <div class="chart-card full-width">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>🔥</span>
+                <span>Feature Correlation Matrix (Seaborn Heatmap)</span>
+            </div>
+            <span class="badge badge-wf">Numerical Features</span>
+        </div>
+        <div class="chart-img-container">
+            <img src="{{ url_for('static', filename='charts/correlation_heatmap.png') }}?v={{ chart_version }}" alt="Correlation Heatmap">
+        </div>
+    </div>
+</div>
+
+<!-- Price Statistical Overview & Renovation / Waterfront Tables Grid -->
+<div class="chart-grid-2col">
+    <!-- Descriptive Statistics Table -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>📐</span>
+                <span>Price Distribution Statistics</span>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value ($USD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Total Count</td><td style="font-weight: 600;">{{ format_number(stats.count) }}</td></tr>
+                    <tr><td>Mean Average</td><td style="font-weight: 700; color: var(--accent-emerald);">{{ format_currency(stats.mean) }}</td></tr>
+                    <tr><td>Standard Deviation</td><td>{{ format_currency(stats.std) }}</td></tr>
+                    <tr><td>Minimum Price</td><td>{{ format_currency(stats.min) }}</td></tr>
+                    <tr><td>25th Percentile (Q1)</td><td>{{ format_currency(stats['25%']) }}</td></tr>
+                    <tr><td>Median Price (Q2)</td><td style="font-weight: 700; color: var(--accent-cyan);">{{ format_currency(stats['50%']) }}</td></tr>
+                    <tr><td>75th Percentile (Q3)</td><td>{{ format_currency(stats['75%']) }}</td></tr>
+                    <tr><td>Maximum Price</td><td style="font-weight: 700; color: var(--accent-rose);">{{ format_currency(stats.max) }}</td></tr>
+                    <tr><td>Skewness Coefficient</td><td style="font-weight: 600;">{{ format_number(stats.skewness, 2) }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Waterfront & Renovation Breakdown -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>🔨</span>
+                <span>Renovation & Waterfront Observed Comparisons</span>
+            </div>
+        </div>
+        <h4 style="font-size: 13px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px;">Renovation Status</h4>
+        <div class="table-responsive" style="margin-bottom: 20px;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Count</th>
+                        <th>Avg Price</th>
+                        <th>Median Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in renovation_table %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ row.is_renovated }}</td>
+                        <td>{{ format_number(row.count) }}</td>
+                        <td style="color: var(--accent-emerald); font-weight: 600;">{{ format_currency(row.avg_price) }}</td>
+                        <td>{{ format_currency(row.median_price) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h4 style="font-size: 13px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 10px;">Waterfront Access</h4>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Waterfront</th>
+                        <th>Count</th>
+                        <th>Avg Price</th>
+                        <th>Median Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in waterfront_table %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ row.label }}</td>
+                        <td>{{ format_number(row.count) }}</td>
+                        <td style="color: var(--accent-cyan); font-weight: 600;">{{ format_currency(row.avg_price) }}</td>
+                        <td>{{ format_currency(row.median_price) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Location Analysis Table -->
+<section class="table-card" style="margin-top: 24px;">
+    <div style="padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 700;">Location Analysis: Top Cities Statistics</h4>
+        <span class="kpi-subtext">Sorted by Average Property Price</span>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>City</th>
+                    <th>Properties Count</th>
+                    <th>Average Price</th>
+                    <th>Median Price</th>
+                    <th>Min Price</th>
+                    <th>Max Price</th>
+                    <th>Price Spread (Range)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in city_table %}
+                <tr>
+                    <td style="font-weight: 700; color: var(--accent-cyan);">{{ c.city }}</td>
+                    <td>{{ format_number(c.count) }}</td>
+                    <td style="font-weight: 700; color: var(--accent-emerald);">{{ format_currency(c.avg_price) }}</td>
+                    <td>{{ format_currency(c.median_price) }}</td>
+                    <td style="color: var(--text-muted);">{{ format_currency(c.min_price) }}</td>
+                    <td style="color: var(--accent-rose);">{{ format_currency(c.max_price) }}</td>
+                    <td>{{ format_currency(c.price_range) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- Bedroom & Bathroom Analysis Tables Grid -->
+<div class="chart-grid-2col">
+    <!-- Bedroom Grouping Table -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>🛏️</span>
+                <span>Bedroom Grouping Statistics</span>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Bedrooms</th>
+                        <th>Properties Count</th>
+                        <th>Average Price</th>
+                        <th>Median Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in bedroom_table %}
+                    <tr>
+                        <td style="font-weight: 700;">{{ format_number(b.bedrooms) }} Beds</td>
+                        <td>{{ format_number(b.count) }}</td>
+                        <td style="color: var(--accent-emerald); font-weight: 600;">{{ format_currency(b.avg_price) }}</td>
+                        <td>{{ format_currency(b.median_price) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Condition Score Grouping Table -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">
+                <span>⭐</span>
+                <span>Condition Rating Grouping</span>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Condition Rating</th>
+                        <th>Properties Count</th>
+                        <th>Average Price</th>
+                        <th>Median Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in condition_table %}
+                    <tr>
+                        <td style="font-weight: 700;">Rating {{ c.condition }}</td>
+                        <td>{{ format_number(c.count) }}</td>
+                        <td style="color: var(--accent-amber); font-weight: 600;">{{ format_currency(c.avg_price) }}</td>
+                        <td>{{ format_currency(c.median_price) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

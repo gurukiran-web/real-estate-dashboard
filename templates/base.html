@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Real Estate House Price Analytics Dashboard{% endblock %}</title>
+    <meta name="description" content="Exploring Property Prices, Features, Locations and Market Trends using Python Flask and Pandas.">
+    <!-- Font & Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏠</text></svg>">
+</head>
+<body>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="brand-header">
+            <div class="brand-logo-icon">🏠</div>
+            <div class="brand-text">
+                <h1>REAL ESTATE</h1>
+                <span>Analytics Hub</span>
+            </div>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                <a href="{{ url_for('index') }}">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_page == 'properties' %}active{% endif %}">
+                <a href="{{ url_for('properties') }}">
+                    <span class="nav-icon">🏢</span>
+                    <span>Properties</span>
+                </a>
+            </li>
+            <li class="nav-item {% if active_page == 'analysis' %}active{% endif %}">
+                <a href="{{ url_for('analysis') }}">
+                    <span class="nav-icon">📈</span>
+                    <span>Detailed Analysis</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <p>BCA Capstone Project</p>
+            <p style="font-size: 11px; margin-top: 4px; color: #475569;">Powered by Flask & Pandas</p>
+        </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+        <!-- Top Navbar -->
+        <header class="top-navbar">
+            <div class="page-title">
+                <h2>Real Estate House Price Analytics Dashboard</h2>
+                <p>Exploring Property Prices, Features, Locations and Market Trends</p>
+            </div>
+            <div class="status-badge">
+                <span class="pulse-dot"></span>
+                <span>Dataset Active</span>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="content-container">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- App Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 Real Estate Analytics Dashboard. Built with Python, Flask, Pandas, Matplotlib & Seaborn.</p>
+        </footer>
+    </div>
+
+</body>
+</html>
